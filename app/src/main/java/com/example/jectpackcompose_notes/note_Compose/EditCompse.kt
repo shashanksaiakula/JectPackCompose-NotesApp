@@ -9,18 +9,37 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Dp
-import com.example.jectpackcompose_notes.R // Your package R file
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jectpackcompose_notes.DB.NoteDatabase
+import com.example.jectpackcompose_notes.Dao.NoteDao
+import com.example.jectpackcompose_notes.R
+import com.example.jectpackcompose_notes.Model.Note
+import com.example.jectpackcompose_notes.noteViewModel.NoteViewModel
+import com.example.jectpackcompose_notes.repository.NoteRepository
 
 @Composable
-fun EditScreen(backToHomeScreen :()-> Unit) {
+fun EditScreen(backToHomeScreen: () -> Unit) {
+    val context = LocalContext.current
+    val database = NoteDatabase.getDatabase(context)
+    val noteDao: NoteDao = database.noteDao()
+    val noteRepository = remember { NoteRepository(noteDao) }
+    // Assuming you have a way to get dependencies needed for NoteViewModel
+    val noteViewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(noteRepository))
+
+    var titleText by remember { mutableStateOf("") }
+    var bodyText by remember { mutableStateOf("") }
     var savePopup by remember { mutableStateOf(false) }
     var deletePopup by remember { mutableStateOf(false) }
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -33,77 +52,66 @@ fun EditScreen(backToHomeScreen :()-> Unit) {
                 modifier = Modifier.padding(10.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                BackIcon(
-                    ImageBitmap.imageResource(id = R.drawable.visibility),
-                    size = 40.dp,
-                    padding = 4.dp
-                ) {
+                BackIcon(ImageBitmap.imageResource(id = R.drawable.visibility), size = 40.dp, padding = 4.dp) {
                     deletePopup = true
                 }
-                BackIcon(
-                    ImageBitmap.imageResource(id = R.drawable.save),
-                    size = 40.dp,
-                    padding = 4.dp
-                ) {
+                BackIcon(ImageBitmap.imageResource(id = R.drawable.save), size = 40.dp, padding = 4.dp) {
                     savePopup = true
                 }
             }
         }
-        EditTitle()
-        BodyText()
 
+        // Title and Body Text Fields
+        EditTitle(titleText) { titleText = it }
+        BodyText(bodyText) { bodyText = it }
+
+        // Save Popup Logic
         if (savePopup) {
-            MyAlert(isDialogOpen = remember { mutableStateOf(savePopup) },
+            MyAlert(
+                isDialogOpen = remember { mutableStateOf(savePopup) },
                 title = "SAVE",
-                text = "Save changes ?",
+                text = "Save changes?",
                 confirmButtomText = "Save",
                 dismissionButtonText = "Cancel",
-                onDesmiss = {
-                    savePopup = false
-                },
+                onDesmiss = { savePopup = false },
                 confirmButtom = {
                     savePopup = false
+                    // Save the note
+                    noteViewModel.insert(Note(title = titleText, body = bodyText))
                     backToHomeScreen()
-
                 },
                 dismissinButton = {
                     savePopup = false
-                    backToHomeScreen()
                 }
             )
-
         }
+
+        // Delete Popup Logic
         if (deletePopup) {
-            MyAlert(isDialogOpen = remember { mutableStateOf(deletePopup) },
+            MyAlert(
+                isDialogOpen = remember { mutableStateOf(deletePopup) },
                 title = "DELETE",
-                text = "Are your sure you want discard your changes ?",
+                text = "Are you sure you want to discard your changes?",
                 confirmButtomText = "Keep",
                 dismissionButtonText = "Discard",
-                onDesmiss = {
-                    deletePopup = false
-                },
+                onDesmiss = { deletePopup = false },
                 confirmButtom = {
                     deletePopup = false
                     backToHomeScreen()
-
                 },
                 dismissinButton = {
                     deletePopup = false
-                    backToHomeScreen()
                 }
             )
-
         }
-
     }
 }
 
 @Composable
-fun EditTitle() {
-    var titleText by remember { mutableStateOf("") }
+fun EditTitle(title: String, onTitleChange: (String) -> Unit) {
     TextField(
-        value = titleText,
-        onValueChange = { titleText = it },
+        value = title,
+        onValueChange = onTitleChange,
         placeholder = { Text(text = "Title", fontSize = 40.sp) },
         colors = TextFieldDefaults.textFieldColors(
             textColor = Color.Gray,
@@ -120,11 +128,10 @@ fun EditTitle() {
 }
 
 @Composable
-fun BodyText() {
-    var bodyText by remember { mutableStateOf("") }
+fun BodyText(body: String, onBodyChange: (String) -> Unit) {
     TextField(
-        value = bodyText,
-        onValueChange = { bodyText = it },
+        value = body,
+        onValueChange = onBodyChange,
         placeholder = { Text(text = "Type something...", fontSize = 20.sp) },
         colors = TextFieldDefaults.textFieldColors(
             textColor = Color.Gray,
@@ -140,7 +147,7 @@ fun BodyText() {
 }
 
 @Composable
-fun BackIcon(imageBitmap: ImageBitmap, size: Dp = 50.dp, padding: Dp = 0.dp, click: () -> Unit,) {
+fun BackIcon(imageBitmap: ImageBitmap, size: Dp = 50.dp, padding: Dp = 0.dp, click: () -> Unit) {
     Image(
         bitmap = imageBitmap,
         contentDescription = "Back Icon",
@@ -151,4 +158,12 @@ fun BackIcon(imageBitmap: ImageBitmap, size: Dp = 50.dp, padding: Dp = 0.dp, cli
     )
 }
 
-
+// ViewModelFactory for NoteViewModel
+class NoteViewModelFactory(private val repository: NoteRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(NoteViewModel::class.java)) {
+            return NoteViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

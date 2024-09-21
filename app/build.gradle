@@ -1,15 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
-    compileSdk 31
+
+    namespace "com.example.jectpackcompose_notes"
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.jectpackcompose_notes"
         minSdk 21
-        targetSdk 31
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -26,12 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17 // Set this to 17
+        targetCompatibility = JavaVersion.VERSION_17 // Set this to 17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
-        useIR = true
+        jvmTarget = "17"
     }
     buildFeatures {
         compose true
@@ -62,4 +64,17 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+
+
+    implementation "androidx.room:room-runtime:2.5.0"
+    kapt "androidx.room:room-compiler:2.5.0" // Add this line for annotation processing
+    implementation "androidx.room:room-ktx:2.5.0"
+
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.5.1" // For Kotlin
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1" // For ViewModel
+
+        // Other dependencies...
+        implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1" // Check for the latest version
+        implementation "androidx.activity:activity-compose:1.6.1" // Check for the latest versio
+
 }
