@@ -82,6 +82,7 @@ fun EditScreen(backToHomeScreen: () -> Unit) {
                 },
                 dismissinButton = {
                     savePopup = false
+                    backToHomeScreen()
                 }
             )
         }
@@ -94,12 +95,15 @@ fun EditScreen(backToHomeScreen: () -> Unit) {
                 text = "Are you sure you want to discard your changes?",
                 confirmButtomText = "Keep",
                 dismissionButtonText = "Discard",
-                onDesmiss = { deletePopup = false },
-                confirmButtom = {
-                    deletePopup = false
+                onDesmiss = { deletePopup = false
                     backToHomeScreen()
                 },
+                confirmButtom = {
+                    deletePopup = false
+
+                },
                 dismissinButton = {
+                    backToHomeScreen()
                     deletePopup = false
                 }
             )
