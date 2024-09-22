@@ -27,18 +27,19 @@ import com.example.jectpackcompose_notes.noteViewModel.NoteViewModel
 import com.example.jectpackcompose_notes.repository.NoteRepository
 
 @Composable
-fun EditScreen(backToHomeScreen: () -> Unit) {
+fun EditScreen(note: Note? = null, backToHomeScreen: () -> Unit) {
     val context = LocalContext.current
     val database = NoteDatabase.getDatabase(context)
     val noteDao: NoteDao = database.noteDao()
     val noteRepository = remember { NoteRepository(noteDao) }
-    // Assuming you have a way to get dependencies needed for NoteViewModel
     val noteViewModel: NoteViewModel = viewModel(factory = NoteViewModelFactory(noteRepository))
 
-    var titleText by remember { mutableStateOf("") }
-    var bodyText by remember { mutableStateOf("") }
+    var titleText by remember { mutableStateOf(note?.title ?: "") }
+    var bodyText by remember { mutableStateOf(note?.body ?: "") }
     var savePopup by remember { mutableStateOf(false) }
     var deletePopup by remember { mutableStateOf(false) }
+
+    Log.e("check", "EditScreen: note is $note")
 
     Column {
         Row(
@@ -52,11 +53,29 @@ fun EditScreen(backToHomeScreen: () -> Unit) {
                 modifier = Modifier.padding(10.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                BackIcon(ImageBitmap.imageResource(id = R.drawable.visibility), size = 40.dp, padding = 4.dp) {
-                    deletePopup = true
-                }
-                BackIcon(ImageBitmap.imageResource(id = R.drawable.save), size = 40.dp, padding = 4.dp) {
-                    savePopup = true
+                if (note != null) {
+                    BackIcon(
+                        ImageBitmap.imageResource(id = R.drawable.mode),
+                        size = 40.dp,
+                        padding = 4.dp
+                    ) {
+                        savePopup = true
+                    }
+                } else {
+                    BackIcon(
+                        ImageBitmap.imageResource(id = R.drawable.visibility),
+                        size = 40.dp,
+                        padding = 4.dp
+                    ) {
+                        deletePopup = true
+                    }
+                    BackIcon(
+                        ImageBitmap.imageResource(id = R.drawable.save),
+                        size = 40.dp,
+                        padding = 4.dp
+                    ) {
+                        savePopup = true
+                    }
                 }
             }
         }
@@ -69,15 +88,18 @@ fun EditScreen(backToHomeScreen: () -> Unit) {
         if (savePopup) {
             MyAlert(
                 isDialogOpen = remember { mutableStateOf(savePopup) },
-                title = "SAVE",
-                text = "Save changes?",
-                confirmButtomText = "Save",
+                title = if (note != null) "EDIT" else "SAVE",
+                text = if (note != null) "Edit changes?" else "Save Changes?",
+                confirmButtomText = if (note != null) "Edit" else "Save",
                 dismissionButtonText = "Cancel",
                 onDesmiss = { savePopup = false },
                 confirmButtom = {
                     savePopup = false
-                    // Save the note
-                    noteViewModel.insert(Note(title = titleText, body = bodyText))
+                    if (note != null) {
+                        noteViewModel.update(note.copy(title = titleText, body = bodyText))
+                    } else {
+                        noteViewModel.insert(Note(title = titleText, body = bodyText))
+                    }
                     backToHomeScreen()
                 },
                 dismissinButton = {
@@ -95,12 +117,12 @@ fun EditScreen(backToHomeScreen: () -> Unit) {
                 text = "Are you sure you want to discard your changes?",
                 confirmButtomText = "Keep",
                 dismissionButtonText = "Discard",
-                onDesmiss = { deletePopup = false
+                onDesmiss = {
+                    deletePopup = false
                     backToHomeScreen()
                 },
                 confirmButtom = {
                     deletePopup = false
-
                 },
                 dismissinButton = {
                     backToHomeScreen()

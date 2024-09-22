@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 @Composable
-fun HomeScreen(goToEditScreen :() ->Unit, goToSearchScreen :()-> Unit) {
+fun HomeScreen(goToEditScreen: (note :Note?) -> Unit, goToSearchScreen: () -> Unit) {
 
     var items = remember { mutableStateListOf<Note>() }
 
@@ -78,12 +78,12 @@ fun HomeScreen(goToEditScreen :() ->Unit, goToSearchScreen :()-> Unit) {
                 size = 40.dp,
 
                 ) {
-                Log.e("add", "HomeScreen: search" )
+                Log.e("add", "HomeScreen: search")
                 goToSearchScreen()
             }
         }
 
-        if(items.isEmpty()) {
+        if (items.isEmpty()) {
 
             Column(
 //                modifier = Modifier.
@@ -98,7 +98,7 @@ fun HomeScreen(goToEditScreen :() ->Unit, goToSearchScreen :()-> Unit) {
                     textAlign = TextAlign.Center
                 )
             }
-        } else{
+        } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,10 +115,12 @@ fun HomeScreen(goToEditScreen :() ->Unit, goToSearchScreen :()-> Unit) {
                                 .border(
                                     width = 1.dp,
                                     color = Color.LightGray,
-                                    shape = RoundedCornerShape(16.dp,
+                                    shape = RoundedCornerShape(
                                         16.dp,
                                         16.dp,
-                                        16.dp)
+                                        16.dp,
+                                        16.dp
+                                    )
                                 ),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -159,14 +161,9 @@ fun HomeScreen(goToEditScreen :() ->Unit, goToSearchScreen :()-> Unit) {
                 imageBitmap = ImageBitmap.imageResource(id = R.drawable.add),
                 size = 40.dp,
             ) {
-                goToEditScreen()
+                goToEditScreen(null)
             }
         }
     }
-
-
 }
 
-fun removeItem(item: Note, items: MutableList<Note>) {
-    items.remove(item) // This will update the UI
-}

@@ -16,10 +16,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jectpackcompose_notes.DB.NoteDatabase
 import com.example.jectpackcompose_notes.Dao.NoteDao
@@ -31,7 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 @Composable
-fun SearchExample(goBackToHome : ()-> Unit) {
+fun SearchExample(goBackToHome: () -> Unit, gotEditScreen :(note : Note) ->Unit) {
     var searchQuery by remember { mutableStateOf("") }
     var data = listOf<Note>()
 
@@ -45,8 +49,8 @@ fun SearchExample(goBackToHome : ()-> Unit) {
 
     runBlocking {
         launch {
-            data= noteViewModel.getAllData()
-            Log.e("Check",data.toString())
+            data = noteViewModel.getAllData()
+            Log.e("Check search", data.toString())
         }
     }
 
@@ -71,10 +75,9 @@ fun SearchExample(goBackToHome : ()-> Unit) {
                         bottomStart = 16.dp,
                         bottomEnd = 16.dp
                     )
-                )
-                ,
-            horizontalArrangement =  Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // Search TextField
             TextField(
@@ -85,32 +88,74 @@ fun SearchExample(goBackToHome : ()-> Unit) {
                     focusedIndicatorColor = Color.Transparent, // Remove the bottom line when focused
                     unfocusedIndicatorColor = Color.Transparent // Remove the bottom line when not focused
                 ),
-                placeholder = { Text(text = "Search by the keyword...")}
+                placeholder = { Text(text = "Search by the keyword...") }
             )
-            Image(painter = painterResource(id = R.drawable.close), contentDescription ="close",
-            modifier = Modifier
-                .clickable { goBackToHome() }
-                .size(30.dp)
-                .padding(0.dp, 0.dp, 5.dp, 0.dp)
-                .background(color = Color.Black, shape = RectangleShape))
+            Image(painter = painterResource(id = R.drawable.close), contentDescription = "close",
+                modifier = Modifier
+                    .clickable { goBackToHome() }
+                    .size(30.dp)
+                    .padding(0.dp, 0.dp, 5.dp, 0.dp)
+                    .background(color = Color.Black, shape = RectangleShape))
 
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Displaying filtered items
-        LazyColumn {
-            items(filteredItems) { item ->
-                item.title?.let {
-                    Text(
-                        text = it,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    )
-                }
+//        LazyColumn {
+//            items(filteredItems) { item ->
+//                item.title?.let {
+//                    Text(
+//                        text = it,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(16.dp)
+//                    )
+//                }
+//
+//            }
+//        }
 
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            items(filteredItems) {
+                it
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .padding(5.dp)
+                        .clickable {
+                            Log.e("check", "SearchExample: $it")
+                            gotEditScreen(it)
+                        }
+                        .border(
+                            width = 1.dp,
+                            color = Color.LightGray,
+                            shape = RoundedCornerShape(
+                                16.dp,
+                                16.dp,
+                                16.dp,
+                                16.dp
+                            )
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    it.title?.let { it2 ->
+                        Text(
+                            it2, fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(5.dp),
+                        )
+                    }
+
+                }
             }
         }
+
     }
 }
